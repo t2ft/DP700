@@ -32,11 +32,11 @@ void _TMessageHandler(QtMsgType t, const QMessageLogContext &context, const QStr
     QString tag = QDateTime::currentDateTime().toString("[yyyy-MM-dd hh:mm:ss.zzz] ");
     if (pTMsgHandler) {
         switch (t) {
-#ifdef QT_DEBUG
         case QtDebugMsg:
+#ifdef QT_DEBUG
             pTMsgHandler->addMessage(tag + "DBUG " + msg);
-            break;
 #endif
+            break;
         case QtInfoMsg:
             pTMsgHandler->addMessage(tag + "INFO " + msg);
             break;
@@ -56,11 +56,11 @@ void _TMessageHandler(QtMsgType t, const QMessageLogContext &context, const QStr
 #endif
     {
         switch (t) {
-#ifdef QT_DEBUG
         case QtDebugMsg:
+#ifdef QT_DEBUG
             fprintf(stdout, "%s DBUG %s\n", qPrintable(tag), qPrintable(msg));
-            break;
 #endif
+            break;
         case QtInfoMsg:
             fprintf(stdout, "%s INFO %s\n", qPrintable(tag), qPrintable(msg));
             break;
