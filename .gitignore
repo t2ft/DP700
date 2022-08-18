@@ -72,3 +72,5 @@ Thumbs.db
 *.exe
 
 setup/
+/res/t2ft_logo_04.svg
+/res/t2ft_logo_512x512_framed-04.png
