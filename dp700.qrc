@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>res/LCDM2B__.TTF</file>
+        <file>res/LCDMB___.TTF</file>
+    </qresource>
+</RCC>
