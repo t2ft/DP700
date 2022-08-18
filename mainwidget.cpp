@@ -43,8 +43,8 @@ MainWidget::MainWidget(QWidget *parent)
     connect(reinterpret_cast<TApp*>(qApp)->msgHandler(), SIGNAL(messageAdded(QString)), this, SLOT(on_messageAdded(QString)));
 
     // setup resources
-    int id = QFontDatabase::addApplicationFont(":/res/LCDM2B__.TTF");
-    id = QFontDatabase::addApplicationFont(":/res/LCDMB___.TTF");
+    QFontDatabase::addApplicationFont(":/res/LCDM2B__.TTF");
+    QFontDatabase::addApplicationFont(":/res/LCDMB___.TTF");
 
     // set custom widget fonts
     QFont fontLCD = QFont("LCDMono", 32);
