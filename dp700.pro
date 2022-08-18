@@ -42,7 +42,6 @@ HEADERS += \
     serdev.h
 
 FORMS += \
-    mainwidget.ui \
     mainwidget.ui
 
 RC_ICONS = res/t2ft_logo_04.ico
