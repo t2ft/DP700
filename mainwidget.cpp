@@ -41,6 +41,8 @@ MainWidget::MainWidget(QWidget *parent)
     , m_setVA(false)
     , m_setVoltageChanged(false)
     , m_setCurrentChanged(false)
+    , m_indicatorCount(0)
+    , m_indicatorInc(8)
 {
     ui->setupUi(this);
 	// allow debug message display
@@ -120,6 +122,7 @@ void MainWidget::timerEvent(QTimerEvent *event)
                 } else {
 //                    qDebug() << " start new measurement";
                     m_flags &= ~UpdateFlags;
+                    updateIndicator(true);
                 }
             }
         }
@@ -130,6 +133,7 @@ void MainWidget::timerEvent(QTimerEvent *event)
         m_dev = new DP700(this);
         m_flags = 0;
         m_idWatchdogTimer = startTimer(WATCHDOG_MS);
+        updateIndicator(false);
     }
 }
 
@@ -294,6 +298,21 @@ void MainWidget::on_setAmps_valueChanged(double x)
     Q_UNUSED(x)
     m_setCurrentChanged = true;
     ui->setAmps->setStyleSheet("color:red;");
+}
+
+void MainWidget::updateIndicator(bool connected)
+{
+    ui->indicator->setText(connected ? tr("connected") : tr("Error"));
+    QColor borderColor = QColor::fromHsv(connected ? 120 : 0, 255, 127+m_indicatorCount);
+    ui->indicator->setStyleSheet( QString("color:green;font-weight:bold ;background:#dfd;border-radius:15px;border-style:solid;border-width:5px;border-color:#%1%2%3;")
+                                     .arg(borderColor.red(),   2, 16, QLatin1Char('0'))
+                                     .arg(borderColor.green(), 2, 16, QLatin1Char('0'))
+                                     .arg(borderColor.blue(),  2, 16, QLatin1Char('0')));
+    m_indicatorCount +=m_indicatorInc;
+    if ((m_indicatorCount > 64) || (m_indicatorCount < 0)) {
+        m_indicatorInc = -m_indicatorInc;
+        m_indicatorCount +=m_indicatorInc;
+    }
 }
 
 void MainWidget::setOnOffText(bool on)

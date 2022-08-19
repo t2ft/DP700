@@ -51,6 +51,8 @@ private slots:
     void on_setVolts_valueChanged(double x);
     void on_setAmps_valueChanged(double x);
 
+    void updateIndicator(bool connected);
+
 private:
     Ui::MainWidget *ui;
 
@@ -81,6 +83,7 @@ private:
     bool            m_setCurrentChanged;
     double          m_newVoltage;
     double          m_newCurrent;
+    int             m_indicatorCount, m_indicatorInc;
 };
 
 #endif // MAINWIDGET_H
