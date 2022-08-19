@@ -72,7 +72,8 @@ private:
     bool            m_lastCommandErrorRequest;
     DP700           *m_dev;
     quint32         m_flags;
-    int             m_timerID;
+    int             m_idUpdateTimer;
+    int             m_idWatchdogTimer;
     bool            m_setOnOff;
     bool            m_newOnOff;
     bool            m_setVA;

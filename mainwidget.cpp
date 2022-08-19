@@ -26,13 +26,17 @@
 #define InfoFlags (IdentificationReceived | VersionReceived)
 #define UpdateFlags (MeasuredVoltageReceived | MeasuredCurrentReceived | MeasuredPowerReceived | SetVoltageReceived | SetCurrentReceived | OnOffReceived | ErrorReceived )
 
+// expect a successful new measurement at least every second
+#define WATCHDOG_MS 1000
+
 MainWidget::MainWidget(QWidget *parent)
     : TMainWidget(parent)
     , ui(new Ui::MainWidget)
     , m_lastCommandErrorRequest(false)
     , m_dev(new DP700(this))
     , m_flags(0)
-    , m_timerID(0)
+    , m_idUpdateTimer(0)
+    , m_idWatchdogTimer(0)
     , m_setOnOff(false)
     , m_setVA(false)
     , m_setVoltageChanged(false)
@@ -78,17 +82,18 @@ void MainWidget::setupGUI()
         close();
     }
     // start regular operations
-    m_timerID = startTimer(20, Qt::PreciseTimer);
+    m_idUpdateTimer = startTimer(20, Qt::PreciseTimer);
 }
 
 MainWidget::~MainWidget()
 {
+    delete m_dev;
     delete ui;
 }
 
 void MainWidget::timerEvent(QTimerEvent *event)
 {
-    if (event->timerId() == m_timerID) {
+    if (event->timerId() == m_idUpdateTimer) {
 //        qDebug() << "+++ MainWidget::timerEvent() +++";
 //        qDebug() << "      flags =" << Qt::hex << m_flags;
         if ((m_flags & InfoFlags) != InfoFlags) {
@@ -98,6 +103,7 @@ void MainWidget::timerEvent(QTimerEvent *event)
             if ((m_flags & UpdateFlags) != UpdateFlags) {
 //                qDebug() << "      -> measure all";
                 m_dev->measureAll();
+                m_idWatchdogTimer = startTimer(WATCHDOG_MS);
             } else {
                 if (m_setOnOff) {
 //                    qDebug() << "      -> set on/off to" << (m_newOnOff ? "ON" : "OFF");
@@ -118,6 +124,12 @@ void MainWidget::timerEvent(QTimerEvent *event)
             }
         }
 //        qDebug() << "--- MainWidget::timerEvent() ---";
+    } else if (event->timerId() == m_idWatchdogTimer) {
+        qWarning() << "Watchdog Timeout!";
+        delete m_dev;
+        m_dev = new DP700(this);
+        m_flags = 0;
+        m_idWatchdogTimer = startTimer(WATCHDOG_MS);
     }
 }
 
