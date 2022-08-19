@@ -33,6 +33,7 @@ SerDev::SerDev(const QString &portName, quint32 baudrate, QObject *parent) : QOb
 
 SerDev::~SerDev()
 {
+    qDebug() << "Serdev::~SerDev()";
     delete m_port;
 }
 

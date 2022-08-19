@@ -34,7 +34,7 @@ protected:
 
 
 private slots:
-    void setupGUI();
+    void startDevice();
     void on_messageAdded(const QString &msg);
     void setMeasuredVoltage(double x);
     void setMeasuredCurrent(double x);
@@ -69,7 +69,8 @@ private:
     } MessageFlags;
 
     void setOnOffText(bool on);
-
+    void reconnectDevice();
+    void triggerWatchdog();
 
     bool            m_lastCommandErrorRequest;
     DP700           *m_dev;

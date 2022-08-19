@@ -27,13 +27,13 @@
 #define UpdateFlags (MeasuredVoltageReceived | MeasuredCurrentReceived | MeasuredPowerReceived | SetVoltageReceived | SetCurrentReceived | OnOffReceived | ErrorReceived )
 
 // expect a successful new measurement at least every second
-#define WATCHDOG_MS 1000
+#define WATCHDOG_MS 2000
 
 MainWidget::MainWidget(QWidget *parent)
     : TMainWidget(parent)
     , ui(new Ui::MainWidget)
     , m_lastCommandErrorRequest(false)
-    , m_dev(new DP700(this))
+    , m_dev(nullptr)
     , m_flags(0)
     , m_idUpdateTimer(0)
     , m_idWatchdogTimer(0)
@@ -61,22 +61,10 @@ MainWidget::MainWidget(QWidget *parent)
     ui->setVolts->setFont(fontLCDsmall);
     ui->setAmps->setFont(fontLCDsmall);
 
-    connect(m_dev, &DP700::measuredVoltage, this, &MainWidget::setMeasuredVoltage);
-    connect(m_dev, &DP700::measuredCurrent, this, &MainWidget::setMeasuredCurrent);
-    connect(m_dev, &DP700::measuredPower, this, &MainWidget::setMeasuredPower);
-    connect(m_dev, &DP700::voltageSet, this, &MainWidget::setVoltageSet);
-    connect(m_dev, &DP700::currentSet, this, &MainWidget::setCurrentSet);
-    connect(m_dev, &DP700::onoff, this, &MainWidget::setOnOff);
-    connect(m_dev, &DP700::idn, this, &MainWidget::printIdentification);
-    connect(m_dev, &DP700::version, this, &MainWidget::printVersion);
-    connect(m_dev, &DP700::error, this, &MainWidget::printError);
-
-    // update UI
-    QTimer::singleShot(0, this, SLOT(setupGUI()));
-
+    reconnectDevice();
 }
 
-void MainWidget::setupGUI()
+void MainWidget::startDevice()
 {
     // check if device is available
     if (!m_dev->isValid()) {
@@ -85,10 +73,12 @@ void MainWidget::setupGUI()
     }
     // start regular operations
     m_idUpdateTimer = startTimer(20, Qt::PreciseTimer);
+    triggerWatchdog();
 }
 
 MainWidget::~MainWidget()
 {
+    qDebug() << "MainWidget::~MainWidget()";
     delete m_dev;
     delete ui;
 }
@@ -105,7 +95,6 @@ void MainWidget::timerEvent(QTimerEvent *event)
             if ((m_flags & UpdateFlags) != UpdateFlags) {
 //                qDebug() << "      -> measure all";
                 m_dev->measureAll();
-                m_idWatchdogTimer = startTimer(WATCHDOG_MS);
             } else {
                 if (m_setOnOff) {
 //                    qDebug() << "      -> set on/off to" << (m_newOnOff ? "ON" : "OFF");
@@ -123,17 +112,17 @@ void MainWidget::timerEvent(QTimerEvent *event)
 //                    qDebug() << " start new measurement";
                     m_flags &= ~UpdateFlags;
                     updateIndicator(true);
+                    triggerWatchdog();
                 }
             }
         }
 //        qDebug() << "--- MainWidget::timerEvent() ---";
     } else if (event->timerId() == m_idWatchdogTimer) {
-        qWarning() << "Watchdog Timeout!";
-        delete m_dev;
-        m_dev = new DP700(this);
-        m_flags = 0;
-        m_idWatchdogTimer = startTimer(WATCHDOG_MS);
+        if (m_flags) {
+            qWarning() << "Watchdog Timeout!";
+        }
         updateIndicator(false);
+        reconnectDevice();
     }
 }
 
@@ -303,8 +292,12 @@ void MainWidget::on_setAmps_valueChanged(double x)
 void MainWidget::updateIndicator(bool connected)
 {
     ui->indicator->setText(connected ? tr("connected") : tr("Error"));
+    QColor backgroundColor = QColor::fromHsv(connected ? 120 : 0, 128, 239+m_indicatorCount/4);
     QColor borderColor = QColor::fromHsv(connected ? 120 : 0, 255, 127+m_indicatorCount);
-    ui->indicator->setStyleSheet( QString("color:green;font-weight:bold ;background:#dfd;border-radius:15px;border-style:solid;border-width:5px;border-color:#%1%2%3;")
+    ui->indicator->setStyleSheet( QString("color:green;font-weight:bold ;background:#%1%2%3;border-radius:15px;border-style:solid;border-width:5px;border-color:#%4%5%6;")
+                                     .arg(backgroundColor.red(),   2, 16, QLatin1Char('0'))
+                                     .arg(backgroundColor.green(), 2, 16, QLatin1Char('0'))
+                                     .arg(backgroundColor.blue(),  2, 16, QLatin1Char('0'))
                                      .arg(borderColor.red(),   2, 16, QLatin1Char('0'))
                                      .arg(borderColor.green(), 2, 16, QLatin1Char('0'))
                                      .arg(borderColor.blue(),  2, 16, QLatin1Char('0')));
@@ -321,5 +314,31 @@ void MainWidget::setOnOffText(bool on)
     ui->measuredVolts->setStyleSheet(on ? "color:blue" : "color:darkgrey");
     ui->measuredWatts->setStyleSheet(on ? "color:blue" : "color:darkgrey");
     ui->onoff->setText(on ? tr("ON / off") : tr("on / OFF"));
+}
+
+void MainWidget::reconnectDevice()
+{
+    delete m_dev;
+    m_flags = 0;
+    m_dev = new DP700(this);
+    killTimer(m_idUpdateTimer);
+    m_idUpdateTimer = 0;
+    connect(m_dev, &DP700::measuredVoltage, this, &MainWidget::setMeasuredVoltage);
+    connect(m_dev, &DP700::measuredCurrent, this, &MainWidget::setMeasuredCurrent);
+    connect(m_dev, &DP700::measuredPower, this, &MainWidget::setMeasuredPower);
+    connect(m_dev, &DP700::voltageSet, this, &MainWidget::setVoltageSet);
+    connect(m_dev, &DP700::currentSet, this, &MainWidget::setCurrentSet);
+    connect(m_dev, &DP700::onoff, this, &MainWidget::setOnOff);
+    connect(m_dev, &DP700::idn, this, &MainWidget::printIdentification);
+    connect(m_dev, &DP700::version, this, &MainWidget::printVersion);
+    connect(m_dev, &DP700::error, this, &MainWidget::printError);
+
+    QTimer::singleShot(250, this, &MainWidget::startDevice);
+}
+
+void MainWidget::triggerWatchdog()
+{
+    killTimer(m_idWatchdogTimer);
+    m_idWatchdogTimer = startTimer(WATCHDOG_MS);
 }
 
