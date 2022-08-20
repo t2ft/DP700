@@ -303,6 +303,13 @@ QPushButton:checked::pressed {
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>onoff</tabstop>
+  <tabstop>setVolts</tabstop>
+  <tabstop>setAmps</tabstop>
+  <tabstop>setVA</tabstop>
+  <tabstop>textMessage</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
