@@ -60,6 +60,8 @@ MainWidget::MainWidget(QWidget *parent)
     ui->measuredWatts->setFont(fontLCD);
     ui->setVolts->setFont(fontLCDsmall);
     ui->setAmps->setFont(fontLCDsmall);
+    ui->setVolts->setStyleSheet("color:white;");
+    ui->setAmps->setStyleSheet("color:white;");
 
     reconnectDevice();
 }
@@ -105,8 +107,8 @@ void MainWidget::timerEvent(QTimerEvent *event)
                     if (!m_setVA) {
                         m_setVoltageChanged = false;
                         m_setCurrentChanged = false;
-                        ui->setVolts->setStyleSheet("");
-                        ui->setAmps->setStyleSheet("");
+                        ui->setVolts->setStyleSheet("color:white;");
+                        ui->setAmps->setStyleSheet("color:white;");
                     }
                 } else {
 //                    qDebug() << " start new measurement";
@@ -294,7 +296,7 @@ void MainWidget::updateIndicator(bool connected)
     ui->indicator->setText(connected ? tr("connected") : tr("Error"));
     QColor backgroundColor = QColor::fromHsv(connected ? 120 : 0, 128, 239+m_indicatorCount/4);
     QColor borderColor = QColor::fromHsv(connected ? 120 : 0, 255, 127+m_indicatorCount);
-    ui->indicator->setStyleSheet( QString("color:green;font-weight:bold ;background:#%1%2%3;border-radius:15px;border-style:solid;border-width:5px;border-color:#%4%5%6;")
+    ui->indicator->setStyleSheet( QString("color:green;font-weight:bold ;background:#%1%2%3;border-radius:15px;border-style:solid;border-width:4px;border-color:#%4%5%6;")
                                      .arg(backgroundColor.red(),   2, 16, QLatin1Char('0'))
                                      .arg(backgroundColor.green(), 2, 16, QLatin1Char('0'))
                                      .arg(backgroundColor.blue(),  2, 16, QLatin1Char('0'))
@@ -310,9 +312,9 @@ void MainWidget::updateIndicator(bool connected)
 
 void MainWidget::setOnOffText(bool on)
 {
-    ui->measuredAmps->setStyleSheet(on ? "color:blue" : "color:darkgrey");
-    ui->measuredVolts->setStyleSheet(on ? "color:blue" : "color:darkgrey");
-    ui->measuredWatts->setStyleSheet(on ? "color:blue" : "color:darkgrey");
+    ui->measuredAmps->setStyleSheet(on ? "color:yellow" : "color:darkgrey");
+    ui->measuredVolts->setStyleSheet(on ? "color:yellow" : "color:darkgrey");
+    ui->measuredWatts->setStyleSheet(on ? "color:yellow" : "color:darkgrey");
     ui->onoff->setText(on ? tr("ON / off") : tr("on / OFF"));
 }
 
