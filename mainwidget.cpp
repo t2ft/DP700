@@ -293,18 +293,15 @@ void MainWidget::on_setAmps_valueChanged(double x)
 
 void MainWidget::updateIndicator(bool connected)
 {
+    const int maxIndicatorCount = 64;
     ui->indicator->setText(connected ? tr("connected") : tr("Error"));
-    QColor backgroundColor = QColor::fromHsv(connected ? 120 : 0, 128, 239+m_indicatorCount/4);
-    QColor borderColor = QColor::fromHsv(connected ? 120 : 0, 255, 127+m_indicatorCount);
-    ui->indicator->setStyleSheet( QString("color:green;font-weight:bold ;background:#%1%2%3;border-radius:15px;border-style:solid;border-width:4px;border-color:#%4%5%6;")
-                                     .arg(backgroundColor.red(),   2, 16, QLatin1Char('0'))
-                                     .arg(backgroundColor.green(), 2, 16, QLatin1Char('0'))
-                                     .arg(backgroundColor.blue(),  2, 16, QLatin1Char('0'))
-                                     .arg(borderColor.red(),   2, 16, QLatin1Char('0'))
-                                     .arg(borderColor.green(), 2, 16, QLatin1Char('0'))
-                                     .arg(borderColor.blue(),  2, 16, QLatin1Char('0')));
+    ui->indicator->setStyleSheet( QString("color:%1;font-weight:bold ;background:%2;border-radius:15px;border-style:solid;border-width:4px;border-color:%3;")
+                                     .arg(QColor::fromHsv(connected ? 120 : 0, 200, 128).name())
+                                     .arg(QColor::fromHsv(connected ? 120 : 0, 128, (255-maxIndicatorCount/4)+m_indicatorCount/4).name())
+                                     .arg(QColor::fromHsv(connected ? 120 : 0, 255, (255-2*maxIndicatorCount)+m_indicatorCount).name())
+    );
     m_indicatorCount +=m_indicatorInc;
-    if ((m_indicatorCount > 64) || (m_indicatorCount < 0)) {
+    if ((m_indicatorCount > maxIndicatorCount) || (m_indicatorCount < 0)) {
         m_indicatorInc = -m_indicatorInc;
         m_indicatorCount +=m_indicatorInc;
     }
