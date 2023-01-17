@@ -29,6 +29,7 @@
 
 #define GRP_DP700           "DP700_Config"
 #define CFG_ALWAYS_ON_TOP   "alwaysOnTop"
+#define CFG_LOG_FONT_SIZE        "logFont"
 
 
 // expect a successful new measurement at least every second
@@ -53,6 +54,9 @@ MainWidget::MainWidget(QWidget *parent)
     QSettings cfg;
     cfg.beginGroup(GRP_DP700);
     ui->alwaysOnTop->setChecked(cfg.value(CFG_ALWAYS_ON_TOP, false).toBool());
+    QFont f = ui->textMessage->document()->defaultFont();
+    f.setPointSizeF(cfg.value(CFG_LOG_FONT_SIZE, f.pointSizeF()).toReal());
+    ui->textMessage->document()->setDefaultFont(f);
     cfg.endGroup();
 
     // allow debug message display
@@ -91,6 +95,12 @@ void MainWidget::startDevice()
 MainWidget::~MainWidget()
 {
     qDebug() << "MainWidget::~MainWidget()";
+    // save log window font size to restore zoom level on next start
+    QSettings cfg;
+    cfg.beginGroup(GRP_DP700);
+    qreal s = ui->textMessage->document()->defaultFont().pointSizeF();
+    cfg.setValue(CFG_LOG_FONT_SIZE, s);
+    cfg.endGroup();
     delete m_dev;
     delete ui;
 }
