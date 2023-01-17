@@ -10,11 +10,11 @@ CONFIG += c++11
 
 
 # application version
-VERSION = 1.0.0.3
+VERSION = 1.0.0.4
 QMAKE_TARGET_COMPANY = t2ft
 QMAKE_TARGET_PRODUCT = DP700
 QMAKE_TARGET_DESCRIPTION = t2ft DP700 control tool
-QMAKE_TARGET_COPYRIGHT = Copyright (C) 2022 by t2ft - Thomas Thanner
+QMAKE_TARGET_COPYRIGHT = Copyright (C) 2022-2023 by t2ft - Thomas Thanner
 
 # Define some preprocessor macros to get the infos in our application.
 DEFINES += APP_VERSION=\\\"$$VERSION\\\"
