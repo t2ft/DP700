@@ -259,13 +259,6 @@ QPushButton:checked::pressed {
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="alwaysOnTop">
-            <property name="text">
-             <string>Always On Top</string>
-            </property>
-           </widget>
-          </item>
-          <item>
            <spacer name="horizontalSpacer_2">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
@@ -303,9 +296,26 @@ QPushButton:checked::pressed {
          </layout>
         </widget>
        </item>
+       <item>
+        <widget class="QCheckBox" name="alwaysOnTop">
+         <property name="text">
+          <string>Always On Top</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
-     <widget class="QPlainTextEdit" name="textMessage"/>
+     <widget class="QPlainTextEdit" name="textMessage">
+      <property name="undoRedoEnabled">
+       <bool>false</bool>
+      </property>
+      <property name="readOnly">
+       <bool>true</bool>
+      </property>
+      <property name="textInteractionFlags">
+       <set>Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+      </property>
+     </widget>
     </widget>
    </item>
   </layout>
