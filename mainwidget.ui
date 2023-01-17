@@ -259,6 +259,13 @@ QPushButton:checked::pressed {
            </widget>
           </item>
           <item>
+           <widget class="QCheckBox" name="alwaysOnTop">
+            <property name="text">
+             <string>Always On Top</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <spacer name="horizontalSpacer_2">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>

@@ -53,6 +53,8 @@ private slots:
 
     void updateIndicator(bool connected);
 
+    void on_alwaysOnTop_toggled(bool checked);
+
 private:
     Ui::MainWidget *ui;
 

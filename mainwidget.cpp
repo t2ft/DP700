@@ -21,10 +21,15 @@
 #include <QSettings>
 #include <QTimerEvent>
 #include <QMessageBox>
+#include <QSettings>
 #include "dp700.h"
 
 #define InfoFlags (IdentificationReceived | VersionReceived)
 #define UpdateFlags (MeasuredVoltageReceived | MeasuredCurrentReceived | MeasuredPowerReceived | SetVoltageReceived | SetCurrentReceived | OnOffReceived | ErrorReceived )
+
+#define GRP_DP700           "DP700_Config"
+#define CFG_ALWAYS_ON_TOP   "alwaysOnTop"
+
 
 // expect a successful new measurement at least every second
 #define WATCHDOG_MS 2000
@@ -45,7 +50,12 @@ MainWidget::MainWidget(QWidget *parent)
     , m_indicatorInc(8)
 {
     ui->setupUi(this);
-	// allow debug message display
+    QSettings cfg;
+    cfg.beginGroup(GRP_DP700);
+    ui->alwaysOnTop->setChecked(cfg.value(CFG_ALWAYS_ON_TOP, false).toBool());
+    cfg.endGroup();
+
+    // allow debug message display
     connect(reinterpret_cast<TApp*>(qApp)->msgHandler(), SIGNAL(messageAdded(QString)), this, SLOT(on_messageAdded(QString)));
 
     // setup resources
@@ -339,5 +349,17 @@ void MainWidget::triggerWatchdog()
 {
     killTimer(m_idWatchdogTimer);
     m_idWatchdogTimer = startTimer(WATCHDOG_MS);
+}
+
+
+void MainWidget::on_alwaysOnTop_toggled(bool checked)
+{
+    qDebug() << "always on top =" << checked;
+    QSettings cfg;
+    cfg.beginGroup(GRP_DP700);
+    cfg.setValue(CFG_ALWAYS_ON_TOP, checked);
+    cfg.endGroup();
+    setWindowFlag(Qt::WindowStaysOnTopHint, checked);
+    show();
 }
 
