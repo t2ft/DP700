@@ -10,7 +10,7 @@ CONFIG += c++11
 
 
 # application version
-VERSION = 1.0.0.4
+VERSION = 1.0.0.5
 QMAKE_TARGET_COMPANY = t2ft
 QMAKE_TARGET_PRODUCT = DP700
 QMAKE_TARGET_DESCRIPTION = t2ft DP700 control tool
@@ -29,7 +29,8 @@ SOURCES += \
     tmainwidget.cpp \
     tmessagehandler.cpp \
     tapp.cpp \
-    serdev.cpp
+    serdev.cpp \
+    tpowereventfilter.cpp
 
 HEADERS += \
     dp700.h \
@@ -39,7 +40,8 @@ HEADERS += \
     tmsghandler_main.h \
     tapp.h \
     silentcall.h \
-    serdev.h
+    serdev.h \
+    tpowereventfilter.h
 
 FORMS += \
     mainwidget.ui
