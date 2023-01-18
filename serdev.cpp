@@ -18,6 +18,7 @@
 SerDev::SerDev(const QString &portName, quint32 baudrate, QObject *parent) : QObject(parent)
   , m_port(new QSerialPort(portName, this))
 {
+    qDebug() << "Serdev::SerDev()";
     m_port->setBaudRate(baudrate);
     m_port->setStopBits(QSerialPort::OneStop);
     m_port->setParity(QSerialPort::NoParity);
