@@ -12,10 +12,12 @@
 // ---------------------------------------------------------------------------
 
 #include "tmainwidget.h"
+#include "tpowereventfilter.h"
 #include <QSettings>
 #include <QTimer>
 #include <QSplitter>
 #include <QDebug>
+#include <QAbstractEventDispatcher>
 
 #define CFG_GRP_WINDOW  "TWindow"
 #define CFG_GEOMETRY    "geometry"
@@ -26,6 +28,13 @@ TMainWidget::TMainWidget(QWidget *parent)
     : QWidget(parent)
 {
     qDebug() << "+++ TMainWidget::TMainWidget(QWidget *parent)";
+    // allow us to dispatch windows power events
+    TPowerEventFilter *pFilter = new TPowerEventFilter(this);
+    QAbstractEventDispatcher::instance()->installNativeEventFilter(pFilter);
+    connect(pFilter, &TPowerEventFilter::PowerStatusChange, this, &TMainWidget::PowerStatusChange);
+    connect(pFilter, &TPowerEventFilter::ResumeAutomatic, this, &TMainWidget::ResumeAutomatic);
+    connect(pFilter, &TPowerEventFilter::ResumeSuspend, this, &TMainWidget::ResumeSuspend);
+    connect(pFilter, &TPowerEventFilter::Suspend, this, &TMainWidget::Suspend);
     QTimer::singleShot(1, this, SLOT(updateGeometry()));
     qDebug() << "--- TMainWidget::TMainWidget(QWidget *parent)";
 }

@@ -1,31 +1,28 @@
 // ***************************************************************************
-// General Support Classes
+// <project description>
 // ---------------------------------------------------------------------------
-// tmainwidget.h, header file
-// QWidget with additional features to implement standard main widget behavior
+// tpowereventfilter.h
+// <file description>
 // ---------------------------------------------------------------------------
-// Copyright (C) 2021 by t2ft - Thomas Thanner
+// Copyright (C) 2023 by t2ft - Thomas Thanner
 // Waldstrasse 15, 86399 Bobingen, Germany
 // thomas@t2ft.de
 // ---------------------------------------------------------------------------
-// 2021-6-7  tt  Initial version created
-// ---------------------------------------------------------------------------
-#ifndef TMAINWIDGET_H
-#define TMAINWIDGET_H
+// 2023-1-18  tt  Initial version created
+// ***************************************************************************
+#ifndef TPOWEREVENTFILTER_H
+#define TPOWEREVENTFILTER_H
 
-#include <QWidget>
+#include <QObject>
+#include <QAbstractNativeEventFilter>
 
-class TMainWidget : public QWidget
+class TPowerEventFilter : public QObject, public QAbstractNativeEventFilter
 {
     Q_OBJECT
-
-private slots:
-    void updateGeometry();
-
 public:
-    explicit TMainWidget(QWidget *parent = nullptr);
+    explicit TPowerEventFilter(QObject *parent = NULL);
 
-    void closeEvent(QCloseEvent *event) override;
+    virtual bool nativeEventFilter(const QByteArray& eventType, void* message, long *result) Q_DECL_OVERRIDE;
 
 signals:
     void PowerStatusChange();   // system power status has changed (battery low, ...)
@@ -33,8 +30,6 @@ signals:
     void ResumeSuspend();       // system has resumed from power down; a user is present
     void Suspend();             // system will go to power down very soon
 
-private:
-
 };
 
-#endif // TMAINWIDGET_H
+#endif // TPOWEREVENTFILTER_H
