@@ -32,22 +32,22 @@ bool TPowerEventFilter::nativeEventFilter(const QByteArray &eventType, void *mes
     if (msg->message == WM_POWERBROADCAST) {
         switch (msg->wParam) {
         case PBT_APMPOWERSTATUSCHANGE:
-            qDebug() << ("PBT_APMPOWERSTATUSCHANGE  received\n");
+            qDebug() << ("PBT_APMPOWERSTATUSCHANGE  received");
             emit PowerStatusChange();
             ret = true;
             break;
         case PBT_APMRESUMEAUTOMATIC:
-            qDebug() << ("PBT_APMRESUMEAUTOMATIC  received\n");
+            qDebug() << ("PBT_APMRESUMEAUTOMATIC  received");
             emit ResumeAutomatic();
             ret = true;
             break;
         case PBT_APMRESUMESUSPEND:
-            qDebug() << ("PBT_APMRESUMESUSPEND  received\n");
+            qDebug() << ("PBT_APMRESUMESUSPEND  received");
             emit ResumeSuspend();
             ret = true;
             break;
         case PBT_APMSUSPEND:
-            qDebug() << ("PBT_APMSUSPEND  received\n");
+            qDebug() << ("PBT_APMSUSPEND  received");
             emit Suspend();
             ret = true;
             break;
