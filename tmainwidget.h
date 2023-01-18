@@ -26,6 +26,7 @@ public:
     explicit TMainWidget(QWidget *parent = nullptr);
 
     void closeEvent(QCloseEvent *event) override;
+    void preventSuspend(bool prevent = true);
 
 signals:
     void PowerStatusChange();   // system power status has changed (battery low, ...)

@@ -18,6 +18,7 @@
 #include <QSplitter>
 #include <QDebug>
 #include <QAbstractEventDispatcher>
+#include <windows.h>
 
 #define CFG_GRP_WINDOW  "TWindow"
 #define CFG_GEOMETRY    "geometry"
@@ -54,6 +55,19 @@ void TMainWidget::closeEvent(QCloseEvent *event)
     cfg.endGroup();
     QWidget::closeEvent(event);
     qDebug() << "--- TMainWidget::closeEvent(QCloseEvent *event)";
+}
+
+void TMainWidget::preventSuspend(bool prevent)
+{
+#ifdef WIN32
+    if (prevent) {
+        SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_AWAYMODE_REQUIRED);
+    } else {
+        SetThreadExecutionState(ES_CONTINUOUS);
+    }
+#else
+    QWarning() << "TMainWidget::preventSuspend works on Windows only!";
+#endif
 }
 
 void TMainWidget::updateGeometry()
