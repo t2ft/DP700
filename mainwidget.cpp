@@ -54,6 +54,7 @@ MainWidget::MainWidget(QWidget *parent)
     QSettings cfg;
     cfg.beginGroup(GRP_DP700);
     ui->alwaysOnTop->setChecked(cfg.value(CFG_ALWAYS_ON_TOP, false).toBool());
+    setWindowFlag(Qt::WindowStaysOnTopHint, ui->alwaysOnTop->isChecked());
     QFont f = ui->textMessage->document()->defaultFont();
     f.setPointSizeF(cfg.value(CFG_LOG_FONT_SIZE, f.pointSizeF()).toReal());
     ui->textMessage->document()->setDefaultFont(f);
