@@ -63,6 +63,10 @@ MainWidget::MainWidget(QWidget *parent)
     // allow debug message display
     connect(reinterpret_cast<TApp*>(qApp)->msgHandler(), SIGNAL(messageAdded(QString)), this, SLOT(on_messageAdded(QString)));
 
+    // handle power events
+    connect(this, &MainWidget::ResumeSuspend, this, &MainWidget::onResume);
+    connect(this, &MainWidget::Suspend, this, &MainWidget::onSuspend);
+
     // setup resources
     QFontDatabase::addApplicationFont(":/res/LCDM2B__.TTF");
     QFontDatabase::addApplicationFont(":/res/LCDMB___.TTF");
@@ -84,13 +88,15 @@ MainWidget::MainWidget(QWidget *parent)
 void MainWidget::startDevice()
 {
     // check if device is available
-    if (!m_dev->isValid()) {
-        QMessageBox::critical(this, qApp->applicationDisplayName(), tr("Cannot open serial port"));
+    if ((m_dev!=nullptr) && (!m_dev->isValid())) {
+        QMessageBox::critical(this, qApp->applicationDisplayName(), tr("No device or cannot open serial port"));
+        qCritical() << "No device or cannot open serial port";
         close();
     }
     // start regular operations
     m_idUpdateTimer = startTimer(20, Qt::PreciseTimer);
     triggerWatchdog();
+    // prevent uncontrolled power down
 }
 
 MainWidget::~MainWidget()
@@ -112,18 +118,18 @@ void MainWidget::timerEvent(QTimerEvent *event)
 //        qDebug() << "+++ MainWidget::timerEvent() +++";
 //        qDebug() << "      flags =" << Qt::hex << m_flags;
         if ((m_flags & InfoFlags) != InfoFlags) {
-//            qDebug() << "      -> query info";
+            qDebug() << "      -> query info";
             m_dev->queryInfo();
         } else {
-            if ((m_flags & UpdateFlags) != UpdateFlags) {
-//                qDebug() << "      -> measure all";
+            if ((m_flags & UpdateFlags) == 0) {
                 m_dev->measureAll();
+                qDebug() << "      -> measure all";
             } else {
                 if (m_setOnOff) {
-//                    qDebug() << "      -> set on/off to" << (m_newOnOff ? "ON" : "OFF");
+                    qDebug() << "      -> set on/off to" << (m_newOnOff ? "ON" : "OFF");
                     m_setOnOff = !m_dev->setOnOff(m_newOnOff);
                 } else if (m_setVA) {
-//                    qDebug() << "      -> set voltage to" << m_newVoltage << "V, current to" << m_newCurrent << "A";
+                    qDebug() << "      -> set voltage to" << m_newVoltage << "V, current to" << m_newCurrent << "A";
                     m_setVA = !m_dev->setVoltageCurrent(m_newVoltage, m_newCurrent);
                     if (!m_setVA) {
                         m_setVoltageChanged = false;
@@ -132,7 +138,7 @@ void MainWidget::timerEvent(QTimerEvent *event)
                         ui->setAmps->setStyleSheet("color:white;");
                     }
                 } else {
-//                    qDebug() << " start new measurement";
+                    qDebug() << " start new measurement";
                     m_flags &= ~UpdateFlags;
                     updateIndicator(true);
                     triggerWatchdog();
@@ -338,11 +344,23 @@ void MainWidget::setOnOffText(bool on)
 
 void MainWidget::reconnectDevice()
 {
+    disconnectDevice();
+    connectDevice();
+}
+
+void MainWidget::disconnectDevice()
+{
     delete m_dev;
     m_flags = 0;
-    m_dev = new DP700(this);
     killTimer(m_idUpdateTimer);
     m_idUpdateTimer = 0;
+    killTimer(m_idWatchdogTimer);
+    m_idWatchdogTimer = 0;
+}
+
+void MainWidget::connectDevice()
+{
+    m_dev = new DP700(this);
     connect(m_dev, &DP700::measuredVoltage, this, &MainWidget::setMeasuredVoltage);
     connect(m_dev, &DP700::measuredCurrent, this, &MainWidget::setMeasuredCurrent);
     connect(m_dev, &DP700::measuredPower, this, &MainWidget::setMeasuredPower);
@@ -356,9 +374,11 @@ void MainWidget::reconnectDevice()
     QTimer::singleShot(250, this, &MainWidget::startDevice);
 }
 
+
 void MainWidget::triggerWatchdog()
 {
     killTimer(m_idWatchdogTimer);
+    qDebug() << "   -> trigger watchdog";
     m_idWatchdogTimer = startTimer(WATCHDOG_MS);
 }
 
@@ -374,3 +394,14 @@ void MainWidget::on_alwaysOnTop_toggled(bool checked)
     show();
 }
 
+void MainWidget::onSuspend()
+{
+    qInfo() << "suspending DP700 communications";
+    disconnectDevice();
+}
+
+void MainWidget::onResume()
+{
+    qInfo() << "resuming DP700 communications";
+    connectDevice();
+}

@@ -45,6 +45,8 @@ private slots:
     void printIdentification(const QString &x);
     void printVersion(const QString &x);
     void printError(const QString &x);
+    void onSuspend();
+    void onResume();
 
     void on_onoff_toggled(bool checked);
     void on_setVA_clicked();
@@ -72,6 +74,8 @@ private:
 
     void setOnOffText(bool on);
     void reconnectDevice();
+    void disconnectDevice();
+    void connectDevice();
     void triggerWatchdog();
 
     bool            m_lastCommandErrorRequest;
