@@ -14,8 +14,8 @@
 #include <QMutexLocker>
 #include <QDebug>
 
-DP700::DP700(QObject *parent)
-    : SerDev("COM1", 9600, parent)
+DP700::DP700(const QString &port, QObject *parent)
+    : SerDev(port, 9600, parent)
     , m_state(Idle)
 {
 }

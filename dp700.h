@@ -21,7 +21,7 @@ class DP700 : public SerDev
 {
     Q_OBJECT
 public:
-    explicit DP700(QObject *parent = nullptr);
+    explicit DP700(const QString &port, QObject *parent = nullptr);
 
 public slots:
     bool queryInfo();

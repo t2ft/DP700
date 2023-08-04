@@ -52,9 +52,9 @@ private slots:
     void on_setVA_clicked();
     void on_setVolts_valueChanged(double x);
     void on_setAmps_valueChanged(double x);
+    void on_serialPort_currentIndexChanged(int index);
 
     void updateIndicator(bool connected);
-
     void on_alwaysOnTop_toggled(bool checked);
 
 private:
@@ -73,9 +73,9 @@ private:
     } MessageFlags;
 
     void setOnOffText(bool on);
-    void reconnectDevice();
+    void reconnectDevice(const QString &port);
     void disconnectDevice();
-    void connectDevice();
+    void connectDevice(const QString &port);
     void triggerWatchdog();
 
     bool            m_lastCommandErrorRequest;
@@ -91,6 +91,8 @@ private:
     double          m_newVoltage;
     double          m_newCurrent;
     int             m_indicatorCount, m_indicatorInc;
+    QString         m_port;
+    int             m_serialPortIndex;
 };
 
 #endif // MAINWIDGET_H

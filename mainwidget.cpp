@@ -23,15 +23,16 @@
 #include <QMessageBox>
 #include <QSettings>
 #include "dp700.h"
+#include <QSerialPortInfo>
 
 #define InfoFlags (IdentificationReceived | VersionReceived)
 #define UpdateFlags (MeasuredVoltageReceived | MeasuredCurrentReceived | MeasuredPowerReceived | SetVoltageReceived | SetCurrentReceived | OnOffReceived | ErrorReceived )
 
 #define GRP_DP700           "DP700_Config"
 #define CFG_ALWAYS_ON_TOP   "alwaysOnTop"
-#define CFG_LOG_FONT_SIZE        "logFont"
+#define CFG_LOG_FONT_SIZE   "logFont"
 
-
+#define CFG_SERIALPORT      "SerialPort"
 // expect a successful new measurement at least every second
 #define WATCHDOG_MS 2000
 
@@ -49,6 +50,7 @@ MainWidget::MainWidget(QWidget *parent)
     , m_setCurrentChanged(false)
     , m_indicatorCount(0)
     , m_indicatorInc(8)
+    , m_port("COM17")
 {
     ui->setupUi(this);
     QSettings cfg;
@@ -82,7 +84,27 @@ MainWidget::MainWidget(QWidget *parent)
     ui->setVolts->setStyleSheet("color:white;");
     ui->setAmps->setStyleSheet("color:white;");
 
-    reconnectDevice();
+    m_port = cfg.value(CFG_SERIALPORT, m_port).toString();
+    qDebug() << "last serial port:" << m_port;
+    // detect serial ports and fill combo box
+    qDebug() << "detected COM Ports:";
+    QList<QSerialPortInfo> ports = QSerialPortInfo::availablePorts();
+    int inx=0;
+    for (auto &port : ports) {
+        QString name = port.portName();
+        qDebug() << "    " << inx << ": "<< name;
+        SilentCall(ui->serialPort)->addItem(name);
+        if (m_port == name) {
+            m_serialPortIndex = inx;
+            qDebug() << "           -> that's it!";
+        }
+        ++inx;
+    }
+    if (m_serialPortIndex>=0) {
+        SilentCall(ui->serialPort)->setCurrentText(ui->serialPort->itemText(m_serialPortIndex));
+    }
+
+    reconnectDevice(m_port);
 }
 
 void MainWidget::startDevice()
@@ -118,7 +140,7 @@ void MainWidget::timerEvent(QTimerEvent *event)
 //        qDebug() << "+++ MainWidget::timerEvent() +++";
 //        qDebug() << "      flags =" << Qt::hex << m_flags;
         if ((m_flags & InfoFlags) != InfoFlags) {
-            qDebug() << "      -> query info";
+            //qDebug() << "      -> query info";
             m_dev->queryInfo();
         } else {
             if ((m_flags & UpdateFlags) == 0) {
@@ -151,7 +173,7 @@ void MainWidget::timerEvent(QTimerEvent *event)
             qWarning() << "Watchdog Timeout!";
         }
         updateIndicator(false);
-        reconnectDevice();
+        reconnectDevice(m_port);
     }
 }
 
@@ -166,13 +188,13 @@ void MainWidget::on_messageAdded(const QString &msg)
     bool bold =  lineText.contains("send:");
     bool italics = lineText.contains("GUI:", Qt::CaseInsensitive);
     QString lineColor, tagColor;
-	
-	// format qDebug() generated lines
+
+    // format qDebug() generated lines
     if (lineText.contains("DBUG")) {
         // do not add debug lines
         return;
     } else if (lineText.contains("INFO")) {
-	// format qInfo() generated lines
+    // format qInfo() generated lines
         tagColor = bold ? "black" : "grey";
         lineColor = "black";
         if (lineText.contains("\'BE\'")) {
@@ -193,32 +215,32 @@ void MainWidget::on_messageAdded(const QString &msg)
             lineColor = "brown";
         }
     } else if (lineText.contains("WARN")) {
-	// format qWarning() generated lines
+    // format qWarning() generated lines
         tagColor = bold ? "mediumblue" : "royalblue";
         lineColor = "mediumblue";
         m_lastCommandErrorRequest = false;
     } else if (lineText.contains("CRIT")) {
-	// format qCritical() generated lines
+    // format qCritical() generated lines
         tagColor = bold ? "firebrick" : "indianred";
         lineColor = "firebrick";
         m_lastCommandErrorRequest = false;
     } else if (lineText.contains("FATL")) {
-	// format qFatal() generated lines
+    // format qFatal() generated lines
         tagColor = bold ? "darkviolet" : "blueviolet";
         lineColor = "darkviolet";
         m_lastCommandErrorRequest = false;
     } else {
-	// format all other lines
+    // format all other lines
         tagColor = bold ? "gray" : "darkgray";
         lineColor = "gray";
         m_lastCommandErrorRequest = false;
     }
-	// generate HTML code for this line
+    // generate HTML code for this line
     QString line = "<div><span style=\"color:" + tagColor + ";\">" + lineTag + "</span>" \
             "<span style=\"color:" + lineColor + ";font-weight:" + QString(bold ? "bold" : "regular") + ";\">" +
             QString(italics ? "<i>" : "") + lineText.toHtmlEscaped() + QString(italics ? "</i>" : "") + "</span></div>";
     ui->textMessage->appendHtml(line);
-	// ensure last line is visible
+    // ensure last line is visible
     cursor.movePosition(QTextCursor::End);
     cursor.movePosition(QTextCursor::StartOfLine);
     ui->textMessage->setTextCursor(cursor);
@@ -342,10 +364,10 @@ void MainWidget::setOnOffText(bool on)
     ui->onoff->setText(on ? tr("ON / off") : tr("on / OFF"));
 }
 
-void MainWidget::reconnectDevice()
+void MainWidget::reconnectDevice(const QString &port)
 {
     disconnectDevice();
-    connectDevice();
+    connectDevice(port);
 }
 
 void MainWidget::disconnectDevice()
@@ -358,9 +380,9 @@ void MainWidget::disconnectDevice()
     m_idWatchdogTimer = 0;
 }
 
-void MainWidget::connectDevice()
+void MainWidget::connectDevice(const QString &port)
 {
-    m_dev = new DP700(this);
+    m_dev = new DP700(port, this);
     connect(m_dev, &DP700::measuredVoltage, this, &MainWidget::setMeasuredVoltage);
     connect(m_dev, &DP700::measuredCurrent, this, &MainWidget::setMeasuredCurrent);
     connect(m_dev, &DP700::measuredPower, this, &MainWidget::setMeasuredPower);
@@ -403,5 +425,17 @@ void MainWidget::onSuspend()
 void MainWidget::onResume()
 {
     qInfo() << "resuming DP700 communications";
-    connectDevice();
+    connectDevice(m_port);
+}
+
+void MainWidget::on_serialPort_currentIndexChanged(int index)
+{
+    if (m_serialPortIndex != index) {
+        m_serialPortIndex = index;
+        m_port = ui->serialPort->itemText(index);
+        reconnectDevice(m_port);
+        QSettings cfg;
+        cfg.setValue(CFG_SERIALPORT, m_port);
+        qDebug() << "new serial port:" << m_port << "(" << m_serialPortIndex << ")";
+    }
 }
